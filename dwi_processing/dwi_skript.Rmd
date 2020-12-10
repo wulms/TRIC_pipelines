@@ -1,0 +1,360 @@
+---
+title: "dwi"
+author: "Niklas Wulms"
+date: "7/15/2020"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(doParallel)
+library(foreach)
+library(oro.nifti)
+library(neurobase)
+
+source("dwi_functions.R")
+
+# this folder needs a subfolder "sourcedata" containing data in BIDS specification 
+# and a folder "params" with "acqparams.txt and index.txt
+BIDS_folder <- "../../../BD_Test/dwi_pipeline/BIDS"
+
+subject_id <- "sub-(AD|ADHC|BRP|BRPHC)[:digit:]{5}/"
+
+# this file is in FSL folder!
+b02b0_cnf <- "/usr/local/fsl/src/topup/flirtsch/b02b0.cnf"
+
+# parallelization option
+cores_not_to_use = 1
+
+source("filenames.R", local = TRUE)
+```
+
+# Preparing
+
+Calculate index.txt, if it does not exist
+
+```{r}
+# Create Index file if it does not exists
+if(!file.exists(index)){
+  dwi_length_bvals <- dwi_bval[1] %>% 
+    read.table(header = FALSE, sep = "", dec = ".") %>% 
+    length()
+  
+  index_txt <- rep(1, dwi_length_bvals)
+  write_lines(index_txt, 
+              index, 
+              sep = " ")
+  
+  index %>% read.table(header = FALSE, sep = "", dec = ".")
+}
+```
+
+acqparams.txt
+
+```{r}
+acqparams %>% read.table(header = FALSE, sep = "", dec = ".")
+
+```
+
+## Commands
+
+```{r}
+dwi_fslroi(dwi_images, output1_AP_blip)
+```
+
+```{r}
+dwi_fslroi(dwi_b0_images, output2_PA_blip)
+```
+
+```{r}
+dwi_fslmerge(input1 = output1_AP_blip,
+             input2 = output2_PA_blip,
+             output = output3_AP_PA_blips)
+```
+
+```{r}
+dwi_topup(input_APPA = output3_AP_PA_blips,
+          input_acqparams = acqparams,
+          input_cnf = b02b0_cnf,
+          output_topup = output4_topup,
+          output_field = output5_field,
+          output_hifib0 = output6_hifi_b0)
+```
+
+```{r}
+dwi_fslmaths(input = output6_AP_blip,
+             output = output6_AP_blip_tmean)
+
+```
+
+```{r}
+dwi_bet(input = output6_AP_blip_tmean,
+        output = output7_bet)
+```
+
+```{r}
+dwi_eddy(input_dwi = dwi_images, 
+         input_bet = output7_bet, 
+         input_index = index,
+         input_acqparams = acqparams,
+         input_bvec = dwi_bvec,
+         input_bval = dwi_bval,
+         input_topup = output4_topup,
+         output = output8_eddy_unwarped)
+
+# alternative using CUDA!
+
+# dwi_eddy_cuda(input_dwi = dwi_images, 
+#          input_bet = output7_bet, 
+#          input_index = index,
+#          input_acqparams = acqparams,
+#          input_bvec = dwi_bvec,
+#          input_bval = dwi_bval,
+#          input_topup = output4_topup,
+#          output = output8_eddy_cuda)
+```
+
+## BET
+
+```{r}
+
+output9_eddy_maske <- str_replace(output8_eddy_unwarped_nii, ".nii", "_bet.nii")
+
+dwi_bet(input = output8_eddy_unwarped,
+        output = output9_eddy_maske)
+```
+
+# Ende Eddy prepozessing
+
+# QC
+
+```{r}
+dwi_eddy_qc_gif(output8_eddy_unwarped_nii) # this works
+
+# these do not work - why? only 1 image?
+
+# dwi_eddy_qc_gif(output9_eddy_maske)
+# dwi_eddy_qc_gif(output9_eddy_repol_maske)
+```
+
+# DTI Fit
+
+```{r}
+# path_to_folder(output9_fdt)
+
+# eddy normal
+dwi_dtifit(input_eddy = output8_eddy_unwarped,
+           input_bet = output9_eddy_maske,
+           input_bvec = dwi_bvec,
+           input_bval = dwi_bval,
+           output = output9_fdt)
+```
+
+#dtifit -k data -m nodif_brain_mask -r bvecs -b bvals -o dti
+# Add L2 and L3 together and divide by two to create a measure of 
+# radial (perpendicular) diffusivity 
+# fslmaths ${dir}/FDT/${sub}\_L2.nii.gz -add ${dir}/FDT/${sub}\_L3.nii.gz -div 2\
+#${dir}/FDT/${sub}\_L23.nii.gz \# Re-orientate the FA map to standard space 
+# note that you aren't resampling, just spinning it around a bit.
+#fslreorient2std ${dir}/TBSS/${sub}\_FA.nii.gz ${dir}/TBSS/${sub}\_FA.nii.gz \# fslreorient2std sub-001_T1w sub-001_T1w_reoriented
+
+# TBSS Processing
+
+## indexing
+
+```{r}
+source("filenames_tbss.R")
+```
+
+
+## output files
+
+```{r}
+file.copy(FA, FA_out)
+file.copy(L, L_out)
+file.copy(MD, MD_out)
+```
+
+# TBSS like pipeline
+
+## tbss FA
+
+```{r}
+tbss_all(input_directory = output_tbss_FA,
+         input_command = "tbss_1_preproc *.nii.gz")
+
+tbss_all(input_directory = output_tbss_FA,
+         input_command = "tbss_2_reg -T")
+
+
+tbss_all(input_directory = output_tbss_FA,
+         input_command = "tbss_3_postreg -S")
+
+tbss_all(input_directory = output_tbss_FA,
+         input_command = "tbss_4_prestats 0.3")
+```
+
+## tbss non-FA: MD
+
+FA/stats/ copy 
+
+- /TBSS
+  -/FA
+    -/FA
+    -/orig
+    -/stats
+  -/MD
+  -/L
+  
+-FA/FA und FA/stats
+
+/new_nonFA/
+  -/TBSS
+    -/FA
+    -/stats
+    -/MD
+    -/L
+    -/RD (wird aus L errechnet)
+
+```{r}
+# daten finden
+# md_directory <- list.files()
+# umbenennen
+
+folder_FA <- paste0(output_tbss_FA, "/FA")
+folder_stats <- paste0(output_tbss_FA, "/stats")
+
+input_folder <- list.files(output_tbss_FA, full.names = TRUE, 
+                       all.files = TRUE, recursive = TRUE)
+
+output_folder <- input_folder %>%
+   str_replace("tbss/FA", "nonFA/tbss") %>%
+   str_replace("_FA_FA", "_FA")
+
+path_to_folder(output_folder)
+file.copy(input_folder, output_folder)
+# files_FA_in <- list.files(folder_FA, full.names = TRUE, 
+#                        all.files = TRUE, recursive = TRUE) 
+# 
+# files_FA_out <- files_FA_in %>%
+#   str_replace("tbss/FA/FA", "nonFA/tbss/FA") %>%
+#   str_replace("_FA_FA", "_FA")
+#   
+#   
+# files_stats_in <- list.files(folder_stats, full.names = TRUE, 
+#                        all.files = TRUE, recursive = TRUE) 
+# 
+# files_stats_out <- files_stats_in %>%
+#   str_replace("tbss/FA/stats", "nonFA/tbss/stats") %>%
+#   str_replace("_FA_FA", "_FA")
+# 
+# path_to_folder(files_FA_out)
+# path_to_folder(files_stats_out)
+# 
+# file.copy(files_FA_in, files_FA_out)
+# file.copy(files_stats_in, files_stats_out)
+
+```
+
+
+```{r}
+tbss_all(input_directory = output_tbss_nonfa,
+         input_command = "tbss_non_FA MD")
+```
+
+
+```{r}
+
+```
+
+## tbss RD rechnen
+
+fslmaths L2 --add L3 --div 2 RD
+
+
+## AD
+
+```{r}
+L1_files <- str_subset(L_out, "L1.nii")
+L1_output <- str_replace(L1_files, "tbss/L/", "tbss/AD/") %>%
+  str_replace("L1.nii", "FA.nii")
+
+path_to_folder(L1_output)
+file.copy(L1_files, L1_output)
+```
+
+```{r}
+tbss_all(input_directory = output_tbss_nonfa,
+         input_command = "tbss_non_FA AD")
+```
+
+## RD
+
+```{r}
+L2_files <- str_subset(L_out, "L2.nii")
+L3_files <- str_subset(L_out, "L3.nii")
+
+RD_output <- str_replace(L2_files, "L2", "RD")
+
+file.exists(L2_files)
+
+input_command = paste0("fslmaths ", L2_files, " -add ", L3_files, " -div 2 ", RD_output)
+lapply(input_command, system)
+```
+## tbss non-FA: RD
+
+```{r}
+# daten finden
+# md_directory <- list.files()
+# umbenennen
+
+RD_files <- list.files(output_tbss_L, "RD", full.names = TRUE, 
+                       all.files = TRUE, recursive = TRUE)
+
+RD_out <- str_replace(RD_files, "tbss/L/", "tbss/RD/") %>%
+  str_replace("RD.nii", "FA.nii")
+
+path_to_folder(RD_out)
+
+file.copy(RD_files, RD_out)
+
+# file.rename(RD_to_FA_rename, RD_out)
+```
+
+
+```{r}
+tbss_all(input_directory = output_tbss_nonfa,
+         input_command = "tbss_non_FA RD")
+```
+
+
+
+
+# GLM Analysis
+
+\#GLM Design definieren.
+
+```{r}
+stats_fa_directory <- paste0(fa_directory, "stats")
+
+tbss_all(input_directory = stats_directory,
+         input_command = "randomise -i all_FA_skeletonised -o tbss -m mean_FA_skeleton_mask -d design.mat -t design.con -n 500 --T2 -V")
+
+```
+
+\#randomise -i \<4D_input_data\> -o <output_rootname> -d design.mat -t
+design.con -m <mask_image> -n 500 -D -T
+
+```{r}
+command14 <- paste0("tbss_fill", tbss_clustere_corrp_tstat1,
+                    " 0.949",  mean_FA, tbss_clustere_corrp_tstat1_filled)
+print(command14)
+lapply(command14, system)
+```
+
+\#tbss_fill tbss_clustere_corrp_tstat1 0.949 mean_FA
+tbss_clustere_corrp_tstat1_filled

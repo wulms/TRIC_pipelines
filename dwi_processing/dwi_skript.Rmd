@@ -336,15 +336,56 @@ tbss_all(input_directory = output_tbss_nonfa,
 
 # GLM Analysis
 
+glmgui: "Glm"
+
 \#GLM Design definieren.
 
 ```{r}
-stats_fa_directory <- paste0(fa_directory, "stats")
+stats_nonfa_directory <- paste0(output_tbss_nonfa, "/stats")
 
-tbss_all(input_directory = stats_directory,
+tbss_all(input_directory = stats_nonfa_directory,
          input_command = "randomise -i all_FA_skeletonised -o tbss -m mean_FA_skeleton_mask -d design.mat -t design.con -n 500 --T2 -V")
 
+
+randomise_fa_in <- list.files(stats_nonfa_directory, "^tbss", full.names = TRUE)
+randomise_fa_out <- str_replace(randomise_fa_in, "nonFA/tbss/stats/tbss", "randomise/FA/tbss") 
+path_to_folder(randomise_fa_out)
+file.rename(randomise_fa_in, randomise_fa_out)
 ```
+
+```{r}
+tbss_all(input_directory = stats_nonfa_directory,
+         input_command = "randomise -i all_MD_skeletonised -o tbss -m mean_FA_skeleton_mask -d design.mat -t design.con -n 500 --T2 -V")
+
+randomise_fa_in <- list.files(stats_nonfa_directory, "^tbss", full.names = TRUE)
+randomise_fa_out <- str_replace(randomise_fa_in, "nonFA/tbss/stats/tbss", "randomise/MD/tbss") 
+path_to_folder(randomise_fa_out)
+file.rename(randomise_fa_in, randomise_fa_out)
+```
+
+
+```{r}
+tbss_all(input_directory = stats_nonfa_directory,
+         input_command = "randomise -i all_RD_skeletonised -o tbss -m mean_FA_skeleton_mask -d design.mat -t design.con -n 500 --T2 -V")
+
+randomise_fa_in <- list.files(stats_nonfa_directory, "^tbss", full.names = TRUE)
+randomise_fa_out <- str_replace(randomise_fa_in, "nonFA/tbss/stats/tbss", "randomise/RD/tbss") 
+path_to_folder(randomise_fa_out)
+file.rename(randomise_fa_in, randomise_fa_out)
+```
+
+```{r}
+tbss_all(input_directory = stats_nonfa_directory,
+         input_command = "randomise -i all_AD_skeletonised -o tbss -m mean_FA_skeleton_mask -d design.mat -t design.con -n 500 --T2 -V")
+
+randomise_fa_in <- list.files(stats_nonfa_directory, "^tbss", full.names = TRUE)
+randomise_fa_out <- str_replace(randomise_fa_in, "nonFA/tbss/stats/tbss", "randomise/AD/tbss") 
+path_to_folder(randomise_fa_out)
+file.rename(randomise_fa_in, randomise_fa_out)
+```
+
+
+
 
 \#randomise -i \<4D_input_data\> -o <output_rootname> -d design.mat -t
 design.con -m <mask_image> -n 500 -D -T

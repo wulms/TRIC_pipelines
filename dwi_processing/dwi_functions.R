@@ -138,7 +138,7 @@ dwi_eddy <- function(input_dwi, input_bet, input_index, input_acqparams,
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input_dwi)) %dopar% {
     
-    path_to_folder(input_dwi[j])
+    path_to_folder(output[j])
     cat("\014")
     
     if(!file.exists(output[j])) {

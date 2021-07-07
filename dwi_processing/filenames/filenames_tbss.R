@@ -17,13 +17,12 @@ MO  <- list.files(output_tbss_fdt, "", recursive = TRUE, full.names = TRUE)
 SO  <- list.files(output_tbss_fdt, "", recursive = TRUE, full.names = TRUE)
 V  <- list.files(output_tbss_fdt, "", recursive = TRUE, full.names = TRUE)
 
-FA_out <- str_remove(FA, "tbss_fdt/") %>% str_remove(subject_id) %>% str_remove("ses-s\\d{1}/dwi") %>% str_replace("//", "/tbss/FA/")
-L_out <- str_remove(L, "tbss_fdt/") %>% str_remove(subject_id) %>% str_remove("ses-s\\d{1}/dwi") %>% str_replace("//", "/nonFA/tbss/L/")
-MD_out <-str_remove(MD, "tbss_fdt/") %>% 
-  str_remove(subject_id) %>% 
-  str_remove("ses-s\\d{1}/dwi") %>% 
-  str_replace("//", "/nonFA/tbss/MD/") %>%
-  str_replace("_MD", "_FA")
+FA_out <- str_replace(FA, "_fdt/", "/FA/") %>% str_remove(subject_id) %>% str_remove("ses-s\\d{1}/dwi")
+L_out <- str_replace(L, "_fdt/", "/L/") %>% str_remove(subject_id) %>% str_remove("ses-s\\d{1}/dwi") %>% 
+  str_replace("/tbss/", "/nonFA/tbss/")
+MD_out <-str_replace(MD, "_fdt/", "/MD/") %>%  str_remove(subject_id) %>%   str_remove("ses-s\\d{1}/dwi") %>% 
+  str_replace("_MD", "_FA") %>% 
+  str_replace("/tbss/", "/nonFA/tbss/")
 
 path_to_folder(FA_out)
 path_to_folder(L_out)

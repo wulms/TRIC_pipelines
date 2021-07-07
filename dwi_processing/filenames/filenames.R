@@ -1,6 +1,9 @@
 # INPUT
 input_sourcedata <- paste0(BIDS_folder, "/sourcedata")
-input_params <- paste0(BIDS_folder, "/params")
+# OUTPUT - folders
+output_BIDS <- paste0(BIDS_folder, "/derived/TRIC_dwi_pipeline")
+
+input_params <- paste0(output_BIDS, "/params")
 
 acqparams <- paste0(input_params, "/acqparams.txt")
 index <- paste0(input_params, "/index.txt")
@@ -11,8 +14,7 @@ dwi_images <- list.files(input_sourcedata, "s\\d{1}_dwi.nii.gz", full.names = TR
 dwi_bvec <- list.files(input_sourcedata, "s\\d{1}_dwi.bvec", full.names = TRUE, recursive = TRUE)
 dwi_bval <- list.files(input_sourcedata, "s\\d{1}_dwi.bval", full.names = TRUE, recursive = TRUE)
 
-# OUTPUT - folders
-output_BIDS <- paste0(BIDS_folder, "/derived/TRIC_dwi_pipeline")
+
 
 output_topup <- paste0(output_BIDS, "/preprocessing/topup")
 output_eddy <-  paste0(output_BIDS, "/preprocessing/eddy")

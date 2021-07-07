@@ -36,6 +36,7 @@ dwi_fslroi <- function(input, output){
       }
     }
     stopCluster(cl)
+    system("notify-send \"R script finished running\"")
 }
 
 
@@ -56,6 +57,7 @@ dwi_fslmerge <- function(input1, input2, output){
     }
   }
   stopCluster(cl)
+  system("notify-send \"R script finished running\"")
 }
 
 dwi_topup <- function(input_APPA, input_acqparams, input_cnf, 
@@ -80,6 +82,7 @@ dwi_topup <- function(input_APPA, input_acqparams, input_cnf,
     }
   }
   stopCluster(cl)
+  system("notify-send \"R script finished running\"")
 }
 
 
@@ -99,6 +102,7 @@ dwi_fslmaths <- function(input, output){
     }
   }
   stopCluster(cl)
+  system("notify-send \"R script finished running\"")
 }
 
 
@@ -119,6 +123,7 @@ dwi_bet <- function(input, output){
     }
   }
   stopCluster(cl)
+  system("notify-send \"R script finished running\"")
 }
 
 
@@ -136,17 +141,47 @@ dwi_eddy <- function(input_dwi, input_bet, input_index, input_acqparams,
                     " -v --repol")
   head(command)
   cl <- initialize_parallel(not_use = cores_not_to_use)
+  
   foreach(j = 1:length(input_dwi)) %dopar% {
     
     path_to_folder(output[j])
     cat("\014")
     
-    if(!file.exists(output[j])) {
+    if(!file.exists(paste0(output[j], ".nii.gz"))) {
       system("clear")
       system(command[j])
     }
   }
   stopCluster(cl)
+  system("notify-send \"R script finished running\"")
+}
+
+dwi_eddy_topup_off <- function(input_dwi, input_bet, input_index, input_acqparams, 
+                     input_bvec, input_bval, #input_topup, 
+                     output){
+  command <- paste0("eddy --imain=", input_dwi, 
+                    " --mask=", input_bet, 
+                    " --index=", input_index, 
+                    " --acqp=", input_acqparams, 
+                    " --bvecs=", input_bvec, 
+                    " --bvals=", input_bval, 
+                    " --fwhm=0", # --topup=", input_topup, 
+                    " --flm=quadratic --out=", output, 
+                    " -v --repol")
+  head(command)
+  cl <- initialize_parallel(not_use = cores_not_to_use)
+  foreach(j = 1:length(input_dwi)) %dopar% {
+    
+    path_to_folder(output[j])
+    cat("\014")
+    
+    if(!file.exists(paste0(output[j], ".nii.gz"))) {
+      system("clear")
+      system(command[j])
+    }
+  }
+  stopCluster(cl)
+  system("notify-send \"R script finished running\"")
 }
 
 
@@ -189,6 +224,7 @@ dwi_eddy_cuda <- function(input_dwi, input_bet, input_index, input_acqparams,
     }
   }
   stopCluster(cl)
+  system("notify-send \"R script finished running\"")
 }
 
 dwi_eddy_bidirect <- function(input_dwi, input_bet, input_index, input_acqparams, 
@@ -216,6 +252,7 @@ dwi_eddy_bidirect <- function(input_dwi, input_bet, input_index, input_acqparams
     }
   }
   stopCluster(cl)
+  system("notify-send \"R script finished running\"")
 }
 
 
@@ -249,6 +286,8 @@ dwi_eddy_qc_gif <- function(input){
     file.remove(list.files(path = output_folder[i], pattern = ".png", full.names = TRUE))
     
   }
+  stopCluster(cl)
+  system("notify-send \"R script finished running\"")
 }
 
 
@@ -275,6 +314,7 @@ dwi_dtifit <- function(input_eddy, input_bet, input_bvec, input_bval,
     }
   }
   stopCluster(cl)
+  system("notify-send \"R script finished running\"")
 }
 
 tbss_all <- function(input_directory, input_command){
@@ -283,12 +323,14 @@ tbss_all <- function(input_directory, input_command){
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input_command)) %dopar% {
   
-  path_to_folder(input_command[j])
+  # path_to_folder(input_command[j])
   cat("\014")
     system(command[j])
 }
 stopCluster(cl)
+system("notify-send \"R script finished running\"")
 }
+
 
 fsl_randomise <- function(input_directory, input_command){
   command <- paste0("cd ", input_directory, " && ", input_command)
@@ -301,4 +343,6 @@ fsl_randomise <- function(input_directory, input_command){
     system(command[j])
   }
   stopCluster(cl)
+  system("notify-send \"R script finished running\"")
+  
 }

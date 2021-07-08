@@ -33,4 +33,7 @@ all_RD_skeletonised <- paste0(output_tbss_nonfa, "/stats/all_RD_skeletonised")
 all_AD_skeletonised <- paste0(output_tbss_nonfa, "/stats/all_AD_skeletonised")
 
 
-
+meanstats_long_csv <- paste0(output_extraction, "/meanstats_long.csv")
+meanstats_wide_csv <- paste0(output_extraction, "/meanstats_wide.csv")
+meants_long_csv <- paste0(output_extraction, "/meants_long.csv")
+meants_wide_csv <- paste0(output_extraction, "/meants_wide.csv")

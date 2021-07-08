@@ -172,42 +172,7 @@ source("dwi_processing/methods/4_md_fa_extraction.R")
 
 
 ```{r}
-subject_string = str_remove(subject_id, "/")
-
-subject_ids = list.files(paste0(output_tbss_nonfa, "/origdata")) %>%
-  str_extract(pattern = subject_string)
-
-a <- read.table(merged_df$files[52], header = FALSE, col.names = c("mean", "sd"), row.names = subject_ids) %>%
-  select(mean)
-
-read.table(merged_df$files[52], header = FALSE, col.names = c("mean", "sd"), row.names = subject_ids) %>%
-  select(sd)
-
-```
-
-```{r}
-merged_df_test <- merged_df %>%
-  filter(txt_type == "meantstats")
-
-
-dataframes <- lapply(merged_df_test$files, read.table, 
-         header = FALSE, col.names = c("mean", "sd"))
-
-
-merged_df_test %>% cbind(dataframes)
-
-
-merged_df_test %>%
-  mutate(table = lapply(files, read.table, header = FALSE, col.names = c("mean", "sd"), row.names = subject_ids),
-         table = map(table,
-                      ~ mutate(.x,
-                               id = subject_ids)
-                      )) %>%
-  unnest(table) %>%
-  select(-files, -filename, -txt_type) %>%
-  relocate(id) %>%
-  pivot_wider(names_from = c("type", "roinum", "roi"),
-              values_from = c("mean", "sd"))
+source("dwi_processing/methods/5_readout_FA_MD_RD_AD.R")
 ```
 
 

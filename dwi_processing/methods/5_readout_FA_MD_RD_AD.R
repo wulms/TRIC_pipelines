@@ -1,3 +1,5 @@
+
+# read all the metadata
 merged_df <- tibble(files = list.files(path = output_extraction, 
                                        pattern = "txt", 
                                        recursive = TRUE, full.names = TRUE)) %>%
@@ -10,26 +12,58 @@ merged_df <- tibble(files = list.files(path = output_extraction,
          roi = str_extract(filename, "(?<=[:digit:]{3}_).*$") %>%
            str_remove(".txt"))
 
-merged_df %>%
-  mutate(txt = lapply(files, read.delim, header = FALSE) %>% unlist())
 
 
-#
-lapply(merged_df$files[344], read.delim, header = FALSE)
-
-
+# split dfs into meants and meanstats
 merged_df %>%
   filter(str_detect(files, "meantstats")) -> meanstats_df
 
 merged_df %>%
   filter(!str_detect(files, "meantstats")) -> meants_df
 
+
+# extract subject information
+subject_string = str_remove(subject_id, "/")
+
+subject_ids = list.files(paste0(output_tbss_nonfa, "/origdata")) %>%
+  str_extract(pattern = subject_string)
+
+
+#calculate merged dfs
 meants_df %>%
 #  nest(files) %>%
   mutate(text = lapply(files, read.delim, header = FALSE)) %>% 
-  unnest(text)
+  unnest(text) %>% 
+  rename(mean = V1) %>%
+  cbind(subject_ids) -> meants_long
+
+meants_long %>% 
+  select(-filename, -files) %>%
+  pivot_wider(names_from = c(type, roinum, roi), 
+              values_from = mean) -> meants_wide
 
 
-subjects <- RD_output %>%
-  str_extract(., subject_id)
+meanstats_df %>%
+  #  nest(files) %>%
+  mutate(text = lapply(files, read.delim, header = FALSE)) %>% 
+  unnest(text) %>% 
+  mutate(V1 = str_remove(V1, " $")) %>%
+  cbind(subject_ids) %>%
+  separate(V1, into = c("mean", "sd"), sep = " ") -> meanstats_long
+
+meanstats_long %>%
+  select(-filename, -files) %>%
+  pivot_wider(names_from = c(type, roinum, roi), 
+              values_from = c(mean, sd)) -> meanstats_wide
+
+# write out the files
+readr::write_csv(meanstats_long, file = meanstats_long_csv)
+readr::write_csv(meanstats_wide, file = meanstats_wide_csv)
+readr::write_csv(meants_long, file = meants_long_csv)
+readr::write_csv(meants_wide, file = meants_wide_csv)
+
+
+
+
+
       

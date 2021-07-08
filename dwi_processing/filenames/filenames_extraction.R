@@ -17,7 +17,7 @@
 
 
 # extraction filenames
-output_extraction <- paste0(output_BIDS, "/extraction")
+output_extraction <- paste0(output_BIDS, "/5_extraction")
 output_extraction_ROI <- paste0(output_extraction, "/ROI")
 # filenames - output
 output_extraction_FA <- paste0(output_extraction, "/FA")

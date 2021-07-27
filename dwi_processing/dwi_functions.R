@@ -26,7 +26,7 @@ initialize_parallel <- function(not_use = cores_not_to_use) {
 dwi_fslroi <- function(input, output){
   command <- paste0("fslroi ", input, 
                     " ", output, " 0 1")
-  head(command)
+  print(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input)) %dopar% {
       
@@ -47,7 +47,7 @@ dwi_fslmerge <- function(input1, input2, output){
   command <- paste0("fslmerge -t ", output,
                     " ", input1,
                     " ", input2)
-  head(command)
+  print(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input1)) %dopar% {
     
@@ -72,7 +72,7 @@ dwi_topup <- function(input_APPA, input_acqparams, input_cnf,
          " --fout=", output_field, 
          " --iout=", output_hifib0, 
          " -v")
-  head(command)
+  print(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input_APPA)) %dopar% {
     
@@ -92,7 +92,7 @@ dwi_topup <- function(input_APPA, input_acqparams, input_cnf,
 dwi_fslmaths <- function(input, output){
   command <- paste0("fslmaths ", input, 
                     " -Tmean ", output)
-  head(command)
+  print(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input)) %dopar% {
     
@@ -113,7 +113,7 @@ dwi_bet <- function(input, output){
   command <- paste0("bet ", input, 
                     " ", output,
                     " -m -f 0.2")
-  head(command)
+  print(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input)) %dopar% {
     
@@ -142,7 +142,7 @@ dwi_eddy <- function(input_dwi, input_bet, input_index, input_acqparams,
                     " --fwhm=0 --topup=", input_topup, 
                     " --flm=quadratic --out=", output, 
                     " -v --repol")
-  head(command)
+  print(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   
   foreach(j = 1:length(input_dwi)) %dopar% {
@@ -171,7 +171,7 @@ dwi_eddy_topup_off <- function(input_dwi, input_bet, input_index, input_acqparam
                     " --fwhm=0", # --topup=", input_topup, 
                     " --flm=quadratic --out=", output, 
                     " -v --repol")
-  head(command)
+  print(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input_dwi)) %dopar% {
     
@@ -242,7 +242,7 @@ dwi_eddy_bidirect <- function(input_dwi, input_bet, input_index, input_acqparams
                 #    " --fwhm=0 --topup=", input_topup, 
                     " --flm=quadratic --out=", output, 
                     " -v --repol")
-  head(command)
+  print(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input_dwi)) %dopar% {
     
@@ -303,7 +303,7 @@ dwi_dtifit <- function(input_eddy, input_bet, input_bvec, input_bval,
                     " -b ", input_bval,
                     " -o ", output)
   path_to_folder(output9_fdt)
-  head(command)
+  print(head(command))
   
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input_eddy)) %dopar% {
@@ -323,7 +323,6 @@ dwi_dtifit <- function(input_eddy, input_bet, input_bvec, input_bval,
 tbss_all <- function(input_directory, input_command){
   command <- paste0("cd ", input_directory, " && ", input_command)
   print(head(command))
-  cat(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input_command)) %dopar% {
   
@@ -338,7 +337,7 @@ system("notify-send \"R script finished running\"")
 
 fsl_randomise <- function(input_directory, input_command){
   command <- paste0("cd ", input_directory, " && ", input_command)
-  head(command)
+  print(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input_command)) %dopar% {
     

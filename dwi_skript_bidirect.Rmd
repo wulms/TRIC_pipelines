@@ -31,8 +31,37 @@ end_on_fdt = "yes" # (yes/no) "yes": if you have an error, that files with fdt a
 ```
 
 
+## Input files
+
+```{r eval=FALSE}
+# load("../WMH_Paper_Dashboard/data/2021_07_05_Workspace_WMH_Analyse.Rdata")
+# 
+# selected_subjects <- daten_s0$idbidirect %>% unique() %>%
+#   paste(collapse = "|")
+# 
+# bidirect_dwis <- list.files("/mnt/Storage1/bidirect_processing/BIDS/derivatives_temp/FSL/PSMD/", "dwi",
+#                             recursive = TRUE, full.names = TRUE) 
+# 
+# bidirect_dwis_1 <- bidirect_dwis %>% 
+#   str_subset("ses-s(0|4)") %>%
+#   str_subset(selected_subjects)
+# 
+# bidirect_dwis_1_out <- bidirect_dwis_1 %>%
+#   str_replace("PSMD", "TBSS_mahi_0_059375/sourcedata")
+# 
+# bidirect_dwis_2_out <- bidirect_dwis_1 %>%
+#   str_replace("PSMD", "TBSS_mahi_0_0059375/sourcedata") # unrealistic readout time at eddy!!!
+# 
+# # copy them
+# path_to_folder(bidirect_dwis_1_out)
+# path_to_folder(bidirect_dwis_2_out)
+# 
+# file.copy(bidirect_dwis_1, bidirect_dwis_1_out)
+# file.copy(bidirect_dwis_1, bidirect_dwis_2_out)
+```
 
 
+# Start original script
 
 ```{r}
 # this folder needs a subfolder "sourcedata" containing data in BIDS specification 
@@ -43,11 +72,7 @@ end_on_fdt = "yes" # (yes/no) "yes": if you have an error, that files with fdt a
 # subject_id <- "sub-(AD|ADHC|BRP|BRPHC)[:digit:]{5}/"
 
 ## bidirect data
-# BIDS_folder <- "data/data_bidirect_0_0059375/bids/" # error - unrealistic readout time?
-BIDS_folder <- "data/data_bidirect_5_9375/bids/" # error take care - should end without the last "/"
-
-# 0.59 errpr, 0.059 geht?
-
+BIDS_folder <- "/mnt/Storage1/bidirect_processing/BIDS/derivatives_temp/FSL/TBSS_mahi_0_059375/" # take care - should end without the last "/"
 subject_id <- "sub-[:digit:]{5}/"
 
 

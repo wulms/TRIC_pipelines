@@ -54,6 +54,10 @@ b02b0_cnf <- "/usr/local/fsl/src/topup/flirtsch/b02b0.cnf"
 
 source("dwi_processing/filenames/filenames.R", local = TRUE)
 
+<<<<<<< HEAD:dwi_skript.Rmd
+=======
+topup = "on" # sets topup "on" or "off"
+>>>>>>> 494f258a8d55c41eefdc8d0cbf3bfd1ffa166f7b:dwi_processing/dwi_skript.Rmd
 
 ```
 

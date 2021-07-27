@@ -15,6 +15,9 @@ initialize_parallel <- function(not_use = cores_not_to_use) {
   # Initiate cluster
   cl <- makeCluster(no_cores, type = "FORK", outfile = "")
   
+  # works maybe on mac
+  # cl <- parallel::makeCluster(no_cores, setup_strategy = "sequential")
+
   registerDoParallel(cl)
   getDoParWorkers()
   return(cl)

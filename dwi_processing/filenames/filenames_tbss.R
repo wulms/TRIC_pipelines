@@ -26,7 +26,6 @@ L_out <- str_replace(L, "2_tbss_fdt/", "4_nonFA_copy_chaos/tbss/L/") %>%
   str_remove(subject_id) %>% 
   str_remove("ses-s\\d{1}/dwi")
 
-<<<<<<< HEAD
 
 if (end_on_fdt == "yes") {
   MD_out <-str_replace(MD, "2_tbss_fdt/", "4_nonFA_copy_chaos/tbss/MD/") %>% 
@@ -42,13 +41,12 @@ if (end_on_fdt == "no") {
     # rename MD to FA
     str_replace("_MD", "_FA")
 }
-=======
+
 MD_out <-str_replace(MD, "2_tbss_fdt/", "4_nonFA_copy_chaos/tbss/MD/") %>% 
   str_remove(subject_id) %>%  
   str_remove("ses-s\\d{1}/dwi") %>% 
   # rename MD to FA
   str_replace("_MD", "_FA")
->>>>>>> 494f258a8d55c41eefdc8d0cbf3bfd1ffa166f7b
 
 
 

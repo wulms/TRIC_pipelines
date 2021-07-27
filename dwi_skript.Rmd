@@ -54,10 +54,6 @@ b02b0_cnf <- "/usr/local/fsl/src/topup/flirtsch/b02b0.cnf"
 
 source("dwi_processing/filenames/filenames.R", local = TRUE)
 
-<<<<<<< HEAD:dwi_skript.Rmd
-=======
-topup = "on" # sets topup "on" or "off"
->>>>>>> 494f258a8d55c41eefdc8d0cbf3bfd1ffa166f7b:dwi_processing/dwi_skript.Rmd
 
 ```
 
@@ -190,7 +186,7 @@ source("dwi_processing/methods/5_readout_FA_MD_RD_AD.R")
 
 glmgui: "Glm"
 
-\#GLM Design definieren.
+## GLM Design definieren.
 
 ```{r}
 stats_nonfa_directory <- paste0(output_tbss_nonfa, "/stats")
@@ -239,7 +235,7 @@ file.rename(randomise_fa_in, randomise_fa_out)
 
 
 
-\#randomise -i \<4D_input_data\> -o <output_rootname> -d design.mat -t
+## randomise -i \<4D_input_data\> -o <output_rootname> -d design.mat -t
 design.con -m <mask_image> -n 500 -D -T
 
 ```{r}
@@ -249,5 +245,5 @@ print(command14)
 lapply(command14, system)
 ```
 
-\#tbss_fill tbss_clustere_corrp_tstat1 0.949 mean_FA
+## tbss_fill tbss_clustere_corrp_tstat1 0.949 mean_FA
 tbss_clustere_corrp_tstat1_filled

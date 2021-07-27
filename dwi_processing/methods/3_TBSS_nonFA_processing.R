@@ -36,7 +36,6 @@ path_to_folder(L_out)
 file.copy(L, L_out)
 
 L1_files <- str_subset(L_out, "L1.nii")
-<<<<<<< HEAD
 
 if (end_on_fdt == "yes") {
   L1_output <- str_replace(L1_files, "tbss/L/", "tbss/AD/") %>%
@@ -49,11 +48,10 @@ if (end_on_fdt == "no") {
 }
 
   
-=======
+
 L1_output <- str_replace(L1_files, "tbss/L/", "tbss/AD/") %>%
   str_replace("L1.nii", "FA.nii")
 
->>>>>>> 494f258a8d55c41eefdc8d0cbf3bfd1ffa166f7b
 path_to_folder(L1_output)
 file.copy(L1_files, L1_output)
 ##
@@ -77,7 +75,6 @@ lapply(input_command, system)
 RD_files <- list.files(output_tbss_L, "RD", full.names = TRUE, 
                        all.files = TRUE, recursive = TRUE)
 
-<<<<<<< HEAD
 if (end_on_fdt == "yes") {
   RD_out <- str_replace(RD_files, "tbss/L/", "tbss/RD/") %>%
     str_remove("_RD")
@@ -87,10 +84,9 @@ if (end_on_fdt == "no") {
   RD_out <- str_replace(RD_files, "tbss/L/", "tbss/RD/") %>%
     str_replace("RD.nii", "FA.nii")
 }
-=======
+
 RD_out <- str_replace(RD_files, "tbss/L/", "tbss/RD/") %>%
   str_replace("RD.nii", "FA.nii")
->>>>>>> 494f258a8d55c41eefdc8d0cbf3bfd1ffa166f7b
 
 path_to_folder(RD_out)
 file.copy(RD_files, RD_out)

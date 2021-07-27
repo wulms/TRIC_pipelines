@@ -319,7 +319,8 @@ dwi_dtifit <- function(input_eddy, input_bet, input_bvec, input_bval,
 
 tbss_all <- function(input_directory, input_command){
   command <- paste0("cd ", input_directory, " && ", input_command)
-  head(command)
+  print(head(command))
+  cat(head(command))
   cl <- initialize_parallel(not_use = cores_not_to_use)
   foreach(j = 1:length(input_command)) %dopar% {
   

@@ -3,7 +3,7 @@ input_sourcedata <- paste0(BIDS_folder, "/sourcedata")
 # OUTPUT - folders
 output_BIDS <- paste0(BIDS_folder, "/derived/TRIC_dwi_pipeline")
 
-input_params <- paste0(output_BIDS, "/params")
+input_params <- paste0(output_BIDS, "/0_params")
 
 acqparams <- paste0(input_params, "/acqparams.txt")
 index <- paste0(input_params, "/index.txt")
@@ -16,13 +16,13 @@ dwi_bval <- list.files(input_sourcedata, "s\\d{1}_dwi.bval", full.names = TRUE, 
 
 
 
-output_topup <- paste0(output_BIDS, "/preprocessing/topup")
-output_eddy <-  paste0(output_BIDS, "/preprocessing/eddy")
-output_qc <- paste0(output_BIDS, "/preprocessing/qualitycontrol")
+output_topup <- paste0(output_BIDS, "/1_preprocessing/topup")
+output_eddy <-  paste0(output_BIDS, "/1_preprocessing/eddy")
+output_qc <- paste0(output_BIDS, "/1_preprocessing/qualitycontrol")
 
-output_tbss <- paste0(output_BIDS, "/tbss")
-output_tbss_temp  <- paste0(output_BIDS, "/tbss_temp")
-output_tbss_fdt <- paste0(output_BIDS, "/tbss_fdt")
+output_tbss <- paste0(output_BIDS, "/3_tbss")
+# output_tbss_temp  <- paste0(output_BIDS, "/3_tbss_temp")
+output_tbss_fdt <- paste0(output_BIDS, "/2_tbss_fdt")
 
 # output_b0_image <- str_replace(dwi_images, "dwi.nii", "acq-b0_dwi.nii") %>% str_replace("data_bidirect/", paste0("/", output_folder, "/topup/"))
 

@@ -8,6 +8,7 @@ editor_options:
     wrap: 72
 ---
 
+Install fsl - take care - you need to set the .bash_profile or .bashrc path variables. Otherwise the script won't work.
 Always start R/Rstudio from the Terminal - so that is has access to fsl. Otherwise no processing happens.
 
 ```{r setup, include=FALSE}
@@ -21,10 +22,12 @@ library(xml2)
 library("XML")
 
 
-source("dwi_functions.R")
+source("dwi_processing/dwi_functions.R")
 
 # parallelization option
 cores_not_to_use = 1
+topup = "on" # (on/off) sets topup "on" or "off"
+end_on_fdt = "yes" # (yes/no) "yes": if you have an error, that files with fdt are not found, turn this on. "no": "_FA" will be applied to the end of the filename.
 ```
 
 
@@ -35,7 +38,7 @@ cores_not_to_use = 1
 # and a folder "params" with "acqparams.txt and index.txt
 
 ## tric data
-BIDS_folder <- "../data/data_tric/bids" # take care - should end without the last "/"
+BIDS_folder <- "data/data_tric/bids" # take care - should end without the last "/"
 subject_id <- "sub-(AD|ADHC|BRP|BRPHC)[:digit:]{5}/"
 
 ## bidirect data
@@ -49,9 +52,8 @@ BIDS_folder <- normalizePath(BIDS_folder)
 # this file is in FSL folder!
 b02b0_cnf <- "/usr/local/fsl/src/topup/flirtsch/b02b0.cnf"
 
-source("filenames/filenames.R", local = TRUE)
+source("dwi_processing/filenames/filenames.R", local = TRUE)
 
-topup = "off" # sets topup "on" or "off"
 
 ```
 
@@ -92,20 +94,11 @@ acqparams %>% read.table(header = FALSE, sep = "", dec = ".")
 ## DWI preprocessing
 
 ```{r}
-source("methods/0_dwi_preprocessing.R")
+source("dwi_processing/methods/0_dwi_preprocessing.R")
 ```
 
 ```{r}
-source("methods/1_dti_processing.R")
-```
-
-
-# TBSS Processing
-
-## indexing
-
-```{r}
-source("filenames/filenames_tbss.R")
+source("dwi_processing/methods/1_dti_processing.R")
 ```
 
 
@@ -113,32 +106,37 @@ source("filenames/filenames_tbss.R")
 
 ## tbss FA
 
-## tbss non-FA: MD
+calculate TBSS for FA in the "3_tbss" folder
 
-FA/stats/ copy 
+```{r}
+source("dwi_processing/filenames/filenames_tbss.R")
+source("dwi_processing/methods/2_TBSS_FA_processing.R")
+```
 
-- /TBSS
-  -/FA
-    -/FA
-    -/orig
-    -/stats
-  -/MD
-  -/L
-  
--FA/FA und FA/stats
 
-/new_nonFA/
-  -/TBSS
-    -/FA
-    -/stats
-    -/MD
-    -/L
-    -/RD (wird aus L errechnet)
-    
+## tbss non-FA
+
+first copies the folder and content "tbss" from "3_tbss" to "4_nonFA".
+
+Calculate the AD, RD files.  
+
+- AD is L1.
+- RD is calculated from L2 and L3
+
+Put AD, RD and MD into folders "AD" or "RD" or "MD".  
+
+And rename them to FA.  
+
+Run TBSS on the whole folder.
+
+Now the output should be in the "stats" folder.
+
     
 ```{r}
-source("methods/2_dti_nonFA_processing.R")
+source("dwi_processing/methods/3_TBSS_nonFA_processing.R")
 ```
+
+
     
 
 
@@ -152,7 +150,7 @@ source("methods/2_dti_nonFA_processing.R")
 
 
 ```{r}
-source("filenames/filenames_extraction.R")
+source("dwi_processing/filenames/filenames_extraction.R")
 ```
 
 ```{r}
@@ -164,47 +162,18 @@ atlas_prefix <- "JHU" # custom label of the atlas.
 ```
 
 ```{r}
-source("methods/4_md_fa_extraction.R")
+# whole-brain - unmasked
+
+# frontal, temporal, parietal, occipital
+
+
+# roi-based
+source("dwi_processing/methods/4_md_fa_extraction.R")
 ```
 
 
 ```{r}
-subject_string = str_remove(subject_id, "/")
-
-subject_ids = list.files(paste0(output_tbss_nonfa, "/origdata")) %>%
-  str_extract(pattern = subject_string)
-
-a <- read.table(merged_df$files[52], header = FALSE, col.names = c("mean", "sd"), row.names = subject_ids) %>%
-  select(mean)
-
-read.table(merged_df$files[52], header = FALSE, col.names = c("mean", "sd"), row.names = subject_ids) %>%
-  select(sd)
-
-```
-
-```{r}
-merged_df_test <- merged_df %>%
-  filter(txt_type == "meantstats")
-
-
-dataframes <- lapply(merged_df_test$files, read.table, 
-         header = FALSE, col.names = c("mean", "sd"))
-
-
-merged_df_test %>% cbind(dataframes)
-
-
-merged_df_test %>%
-  mutate(table = lapply(files, read.table, header = FALSE, col.names = c("mean", "sd"), row.names = subject_ids),
-         table = map(table,
-                      ~ mutate(.x,
-                               id = subject_ids)
-                      )) %>%
-  unnest(table) %>%
-  select(-files, -filename, -txt_type) %>%
-  relocate(id) %>%
-  pivot_wider(names_from = c("type", "roinum", "roi"),
-              values_from = c("mean", "sd"))
+source("dwi_processing/methods/5_readout_FA_MD_RD_AD.R")
 ```
 
 

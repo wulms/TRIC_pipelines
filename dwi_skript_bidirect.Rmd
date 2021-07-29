@@ -1,0 +1,279 @@
+---
+title: "dwi"
+author: "Niklas Wulms"
+date: "7/15/2020"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+Install fsl - take care - you need to set the .bash_profile or .bashrc path variables. Otherwise the script won't work.
+Always start R/Rstudio from the Terminal - so that is has access to fsl. Otherwise no processing happens.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(doParallel)
+library(foreach)
+library(oro.nifti)
+library(neurobase)
+library(xml2)
+library("XML")
+
+
+source("dwi_processing/dwi_functions.R")
+
+# parallelization option
+cores_not_to_use = 1
+topup = "off" # (on/off) sets topup "on" or "off"
+end_on_fdt = "yes" # (yes/no) "yes": if you have an error, that files with fdt are not found, turn this on. "no": "_FA" will be applied to the end of the filename.
+```
+
+
+## Input files
+
+```{r eval=FALSE}
+# load("../WMH_Paper_Dashboard/data/2021_07_05_Workspace_WMH_Analyse.Rdata")
+# 
+# selected_subjects <- daten_s0$idbidirect %>% unique() %>%
+#   paste(collapse = "|")
+# 
+# bidirect_dwis <- list.files("/mnt/Storage1/bidirect_processing/BIDS/derivatives_temp/FSL/PSMD/", "dwi",
+#                             recursive = TRUE, full.names = TRUE) 
+# 
+# bidirect_dwis_1 <- bidirect_dwis %>% 
+#   str_subset("ses-s(0|4)") %>%
+#   str_subset(selected_subjects)
+# 
+# bidirect_dwis_1_out <- bidirect_dwis_1 %>%
+#   str_replace("PSMD", "TBSS_mahi_0_059375/sourcedata")
+# 
+# bidirect_dwis_2_out <- bidirect_dwis_1 %>%
+#   str_replace("PSMD", "TBSS_mahi_0_0059375/sourcedata") # unrealistic readout time at eddy!!!
+# 
+# # copy them
+# path_to_folder(bidirect_dwis_1_out)
+# path_to_folder(bidirect_dwis_2_out)
+# 
+# file.copy(bidirect_dwis_1, bidirect_dwis_1_out)
+# file.copy(bidirect_dwis_1, bidirect_dwis_2_out)
+```
+
+
+# Start original script
+
+```{r}
+# this folder needs a subfolder "sourcedata" containing data in BIDS specification 
+# and a folder "params" with "acqparams.txt and index.txt
+
+## tric data
+# BIDS_folder <- "data/data_tric/bids" # take care - should end without the last "/"
+# subject_id <- "sub-(AD|ADHC|BRP|BRPHC)[:digit:]{5}/"
+
+## bidirect data
+BIDS_folder <- "/mnt/Storage1/bidirect_processing/BIDS/derivatives_temp/FSL/TBSS_mahi_0_059375/" # take care - should end without the last "/"
+subject_id <- "sub-[:digit:]{5}/"
+
+
+BIDS_folder <- normalizePath(BIDS_folder)
+
+
+# this file is in FSL folder!
+b02b0_cnf <- "/usr/local/fsl/src/topup/flirtsch/b02b0.cnf"
+
+source("dwi_processing/filenames/filenames.R", local = TRUE)
+
+
+```
+
+
+# Preparing
+
+Calculate index.txt, if it does not exist
+
+```{r}
+path_to_folder(index)
+
+# Create Index file if it does not exists
+if(!file.exists(index)){
+  dwi_length_bvals <- dwi_bval[1] %>% 
+    read.table(header = FALSE, sep = "", dec = ".") %>% 
+    length()
+  
+  index_txt <- rep(1, dwi_length_bvals)
+  write_lines(x = index_txt, 
+              file = index, 
+              sep = " ")
+  
+  index %>% read.table(header = FALSE, sep = "", dec = ".")
+}
+```
+
+acqparams.txt
+
+this file is sequence and user specific and needs to be added manually!
+
+needs to be in the bids/derived/TRIC_dwi_pipeline/params folder
+
+```{r}
+acqparams %>% read.table(header = FALSE, sep = "", dec = ".")
+
+```
+
+## DWI preprocessing
+
+```{r}
+source("dwi_processing/methods/0_dwi_preprocessing.R")
+```
+
+```{r}
+source("dwi_processing/methods/1_dti_processing.R")
+```
+
+
+# TBSS like pipeline
+
+## tbss FA
+
+calculate TBSS for FA in the "3_tbss" folder
+
+```{r}
+source("dwi_processing/filenames/filenames_tbss.R")
+source("dwi_processing/methods/2_TBSS_FA_processing.R")
+```
+
+
+## tbss non-FA
+
+first copies the folder and content "tbss" from "3_tbss" to "4_nonFA".
+
+Calculate the AD, RD files.  
+
+- AD is L1.
+- RD is calculated from L2 and L3
+
+Put AD, RD and MD into folders "AD" or "RD" or "MD".  
+
+And rename them to FA.  
+
+Run TBSS on the whole folder.
+
+Now the output should be in the "stats" folder.
+
+    
+```{r}
+source("dwi_processing/methods/3_TBSS_nonFA_processing.R")
+```
+
+
+    
+
+
+
+
+
+# ROI extraction
+
+
+
+
+
+```{r}
+source("dwi_processing/filenames/filenames_extraction.R")
+```
+
+```{r}
+# inputs
+atlas <- "/usr/local/fsl/data/atlases/JHU/JHU-ICBM-labels-1mm.nii.gz" # exact path to atlas
+label_file <- "/usr/local/fsl/data/atlases/JHU-labels.xml" # exact path to labels to atlas
+
+atlas_prefix <- "JHU" # custom label of the atlas.
+```
+
+```{r}
+# whole-brain - unmasked
+
+# frontal, temporal, parietal, occipital
+
+
+# roi-based
+source("dwi_processing/methods/4_md_fa_extraction.R")
+```
+
+
+```{r}
+source("dwi_processing/methods/5_readout_FA_MD_RD_AD.R")
+```
+
+
+
+
+
+
+
+# GLM Analysis
+
+glmgui: "Glm"
+
+## GLM Design definieren.
+
+```{r}
+stats_nonfa_directory <- paste0(output_tbss_nonfa, "/stats")
+
+tbss_all(input_directory = stats_nonfa_directory,
+         input_command = "randomise -i all_FA_skeletonised -o tbss -m mean_FA_skeleton_mask -d design.mat -t design.con -n 500 --T2 -V")
+
+
+randomise_fa_in <- list.files(stats_nonfa_directory, "^tbss", full.names = TRUE)
+randomise_fa_out <- str_replace(randomise_fa_in, "nonFA/tbss/stats/tbss", "randomise/FA/tbss") 
+path_to_folder(randomise_fa_out)
+file.rename(randomise_fa_in, randomise_fa_out)
+```
+
+```{r}
+tbss_all(input_directory = stats_nonfa_directory,
+         input_command = "randomise -i all_MD_skeletonised -o tbss -m mean_FA_skeleton_mask -d design.mat -t design.con -n 500 --T2 -V")
+
+randomise_fa_in <- list.files(stats_nonfa_directory, "^tbss", full.names = TRUE)
+randomise_fa_out <- str_replace(randomise_fa_in, "nonFA/tbss/stats/tbss", "randomise/MD/tbss") 
+path_to_folder(randomise_fa_out)
+file.rename(randomise_fa_in, randomise_fa_out)
+```
+
+
+```{r}
+tbss_all(input_directory = stats_nonfa_directory,
+         input_command = "randomise -i all_RD_skeletonised -o tbss -m mean_FA_skeleton_mask -d design.mat -t design.con -n 500 --T2 -V")
+
+randomise_fa_in <- list.files(stats_nonfa_directory, "^tbss", full.names = TRUE)
+randomise_fa_out <- str_replace(randomise_fa_in, "nonFA/tbss/stats/tbss", "randomise/RD/tbss") 
+path_to_folder(randomise_fa_out)
+file.rename(randomise_fa_in, randomise_fa_out)
+```
+
+```{r}
+tbss_all(input_directory = stats_nonfa_directory,
+         input_command = "randomise -i all_AD_skeletonised -o tbss -m mean_FA_skeleton_mask -d design.mat -t design.con -n 500 --T2 -V")
+
+randomise_fa_in <- list.files(stats_nonfa_directory, "^tbss", full.names = TRUE)
+randomise_fa_out <- str_replace(randomise_fa_in, "nonFA/tbss/stats/tbss", "randomise/AD/tbss") 
+path_to_folder(randomise_fa_out)
+file.rename(randomise_fa_in, randomise_fa_out)
+```
+
+
+
+
+## randomise -i \<4D_input_data\> -o <output_rootname> -d design.mat -t
+design.con -m <mask_image> -n 500 -D -T
+
+```{r}
+command14 <- paste0("tbss_fill", tbss_clustere_corrp_tstat1,
+                    " 0.949",  mean_FA, tbss_clustere_corrp_tstat1_filled)
+print(command14)
+lapply(command14, system)
+```
+
+## tbss_fill tbss_clustere_corrp_tstat1 0.949 mean_FA
+tbss_clustere_corrp_tstat1_filled

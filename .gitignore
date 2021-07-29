@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+<<<<<<< HEAD
+=======
+.Rproj
+data/
+>>>>>>> 11911d1732cd1f5f0001c5ec5ebb30d78106e665

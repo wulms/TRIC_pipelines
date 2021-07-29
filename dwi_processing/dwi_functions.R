@@ -132,7 +132,8 @@ dwi_bet <- function(input, output){
 
 dwi_eddy <- function(input_dwi, input_bet, input_index, input_acqparams, 
                      input_bvec, input_bval, input_topup, 
-                     output){
+                     output,
+                     parallel = "off"){
   command <- paste0("eddy --imain=", input_dwi, 
                     " --mask=", input_bet, 
                     " --index=", input_index, 
@@ -143,8 +144,8 @@ dwi_eddy <- function(input_dwi, input_bet, input_index, input_acqparams,
                     " --flm=quadratic --out=", output, 
                     " -v --repol")
   print(head(command))
+  if(parallel == "on"){
   cl <- initialize_parallel(not_use = cores_not_to_use)
-  
   foreach(j = 1:length(input_dwi)) %dopar% {
     
     path_to_folder(output[j])
@@ -156,8 +157,25 @@ dwi_eddy <- function(input_dwi, input_bet, input_index, input_acqparams,
     }
   }
   stopCluster(cl)
+  }
+  
+  if(parallel == "off"){
+    # cl <- initialize_parallel(not_use = cores_not_to_use)
+    #foreach(j = 1:length(input_dwi)) %dopar% {
+    for (j in 1:length(input_dwi)) {
+      path_to_folder(output[j])
+      cat("\014")
+      
+      if(!file.exists(paste0(output[j], ".nii.gz"))) {
+        system("clear")
+        system(command[j])
+      }
+    }  
+    }
   system("notify-send \"R script finished running\"")
 }
+
+
 
 dwi_eddy_topup_off <- function(input_dwi, input_bet, input_index, input_acqparams, 
                      input_bvec, input_bval, #input_topup, 
